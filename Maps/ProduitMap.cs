@@ -12,8 +12,10 @@ namespace Poc.API.Core.Maps
         {
             Table("Produits");
             LazyLoad();
-            Id( x => x.Id).Column("ID").GeneratedBy.Assigned().Unique();
+            Id( x => x.Id).Column("ID").GeneratedBy.Identity();
             Map(x => x.Name).Column("Nom");
+            Map(x => x.Prix).Column("Prix");
+            Map(x => x.Categorie).Column("Categorie");
         }
     }
 }

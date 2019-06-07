@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
 namespace Poc.API.Core.Data
 {
     public class FluentNHibernateHelper
@@ -30,7 +29,10 @@ namespace Poc.API.Core.Data
             return Fluently.Configure()
                 .Database(
                     SQLiteConfiguration.Standard
+                        .Dialect("NHibernate.Dialect.SQLiteDialect")
+                        .Driver("NHibernate.Driver.SQLite20Driver")
                         .UsingFile(_dbFile)
+                        .ShowSql()
                 )
                 .Mappings(m => m.FluentMappings.AddFromAssemblyOf<Produit>())
                 .ExposeConfiguration(BuildSchema)
@@ -41,11 +43,15 @@ namespace Poc.API.Core.Data
         {
             if (_overwriteExisting)
             {
-                if (File.Exists(_dbFile)) File.Delete(_dbFile);
+                if (File.Exists( _dbFile))
+                    File.Delete(_dbFile);
+                //else
+                //    File.Create(_dbFile);
 
                 var se = new SchemaExport(config);
-                se.Create(false, true);
+                se.Create(true, true);
             }
+            
         }
     }
 }

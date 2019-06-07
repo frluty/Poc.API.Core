@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Poc.API.Core.Dao;
+using Poc.API.Core.Dao.Interfaces;
+using Poc.API.Core.Dto;
 using Poc.API.Core.Models;
 
 namespace Poc.API.Core.Controllers
@@ -13,93 +16,95 @@ namespace Poc.API.Core.Controllers
     [ApiController]
     public class ProduitsController : ControllerBase
     {
-        private readonly DataContext _context;
-
-        public ProduitsController(DataContext context)
+        //readonly ILogger<ProduitController> logger;
+        private readonly IProduitDao _produitDao;
+        public ProduitsController(IProduitDao iProduitDao)
         {
-            _context = context;
+            _produitDao = iProduitDao;
         }
 
         // GET: api/Produits
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Produit>>> GetProduit()
+        public IActionResult Get(int nb =5)
         {
-            return await _context.Produit.ToListAsync();
+            var list = _produitDao.GetList(nb);
+
+            if (list != null)
+                return Ok(list);
+            else
+                return StatusCode(StatusCodes.Status500InternalServerError, list);
         }
 
         // GET: api/Produits/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Produit>> GetProduit(short id)
+        public IActionResult Get(short id)
         {
-            var produit = await _context.Produit.FindAsync(id);
+            var produit = _produitDao.GetProduit(id);
 
             if (produit == null)
-            {
                 return NotFound();
-            }
-
-            return produit;
+            else
+                return Ok(produit);
         }
 
         // PUT: api/Produits/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduit(short id, Produit produit)
+        public IActionResult Put([FromRoute] long id, [FromBody] string Name)
         {
-            if (id != produit.Id)
+            if (Name != null && Name != "")
             {
-                return BadRequest();
-            }
-
-            _context.Entry(produit).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProduitExists(id))
+                ProduitDto produit = null;
+                try
                 {
-                    return NotFound();
+                    produit = ProduitExists(id);
+                    if (id != produit.Id)
+                    {
+                        return BadRequest();
+                    }
+                    else
+                    {
+                        _produitDao.UpdateProduit(produit, id);
+                    }
                 }
-                else
+                catch (DbUpdateConcurrencyException)
                 {
-                    throw;
+                    if (produit==null)
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError);
+                    }
                 }
             }
-
             return NoContent();
         }
 
         // POST: api/Produits
         [HttpPost]
-        public async Task<ActionResult<Produit>> PostProduit(Produit produit)
+        public IActionResult Post([FromBody] ProduitDto produit)
         {
-            _context.Produit.Add(produit);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetProduit", new { id = produit.Id }, produit);
+            if (_produitDao.CreateProduit(produit))
+                return Ok();
+            else
+                return BadRequest();
         }
 
         // DELETE: api/Produits/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Produit>> DeleteProduit(short id)
+        public IActionResult Delete(short id)
         {
-            var produit = await _context.Produit.FindAsync(id);
-            if (produit == null)
-            {
-                return NotFound();
-            }
-
-            _context.Produit.Remove(produit);
-            await _context.SaveChangesAsync();
-
-            return Ok(produit);
+            var del = _produitDao.DeleteProduit(id);
+            if (!del)
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            else
+                return Ok();
         }
 
-        private bool ProduitExists(short id)
+        private ProduitDto ProduitExists(long id)
         {
-            return _context.Produit.Any(e => e.Id == id);
+            return _produitDao.GetProduit(id);
         }
     }
 }

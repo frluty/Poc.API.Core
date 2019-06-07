@@ -28,7 +28,6 @@ namespace Poc.API.Core.Dao.Repository
                     try
                     {
                         var elt = Mapper.Map<S>(entity);
-
                         con.Save(elt);
                         transaction.Commit();
                     }

@@ -8,6 +8,12 @@ using NSwag.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Poc.API.Core.Models;
 using Poc.API.Core.Data;
+using Poc.API.Core.Dao;
+using Poc.API.Core.Dao.Interfaces;
+using Poc.API.Core.Dto;
+using Poc.API.Core.Dao.Repository;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
 
 namespace Poc.API.Core
 {
@@ -20,11 +26,25 @@ namespace Poc.API.Core
 
         public IConfiguration Configuration { get; }
 
+        
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers()
                 .AddNewtonsoftJson();
             services.AddMvc();
+            services.AddScoped<IProduitDao, ProduitDao>();
+            services.AddTransient<IRepository<ProduitDto>, Repository<Produit, ProduitDto>>();
+
+            #region AutoMapper
+            Mapper.Reset();
+            Mapper.Initialize(cfg =>
+            {
+                cfg.CreateMap<ProduitDto, Produit>();
+                cfg.CreateMap<Produit, ProduitDto>();
+
+            });
+            #endregion
+
             services.AddSwaggerDocument(config =>
             {
                 config.PostProcess = document =>
@@ -46,15 +66,14 @@ namespace Poc.API.Core
                     };
                 };
             });
-
-            services.AddDbContext<DataContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("DataContext")));
+                        
             services.AddSingleton(new FluentNHibernateHelper(Configuration.GetConnectionString("DB"), true));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
+            loggerFactory.CreateLogger(@"C:\API\test.log");
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

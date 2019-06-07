@@ -8,5 +8,7 @@ namespace Poc.API.Core.Models
     public class Produit:ModelBase
     {
         public virtual string Name { get; set; }
+        public virtual string Categorie { get; set; }
+        public virtual float Prix { get; set; }
     }
 }

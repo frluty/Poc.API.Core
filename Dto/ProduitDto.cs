@@ -7,6 +7,8 @@ namespace Poc.API.Core.Dto
 {
     public class ProduitDto: EntityBase
     {
-
+        public virtual string Name { get; set; }
+        public virtual string Categorie { get; set; }
+        public virtual float Prix { get; set; }
     }
 }
