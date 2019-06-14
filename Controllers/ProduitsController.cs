@@ -49,14 +49,12 @@ namespace Poc.API.Core.Controllers
 
         // PUT: api/Produits/5
         [HttpPut("{id}")]
-        public IActionResult Put([FromRoute] long id, [FromBody] string Name)
+        public IActionResult Put([FromRoute] long id, [FromBody] ProduitDto produit)
         {
-            if (Name != null && Name != "")
+            if (produit != null)
             {
-                ProduitDto produit = null;
                 try
                 {
-                    produit = ProduitExists(id);
                     if (id != produit.Id)
                     {
                         return BadRequest();
